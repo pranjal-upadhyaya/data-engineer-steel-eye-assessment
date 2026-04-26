@@ -40,7 +40,7 @@ def extract_xml_from_file(file_path: str):
     extract_xml_data(context)
     
 
-def extract_xml_data(context: Any, data: []):
+def extract_xml_data(context: Any):
     loop = 100
     for event, elem in context:
         namespace = elem.tag.split("}")[0]+"}"
@@ -52,9 +52,6 @@ def extract_xml_data(context: Any, data: []):
         cmmdty      = extract_data_from_xml_ele(fin, namespace, "CmmdtyDerivInd")
         ntnl_ccy    = extract_data_from_xml_ele(fin, namespace, "NtnlCcy")
         issr        = extract_data_from_xml_ele(fin, namespace, "Issr")
-        data_set = {
-            Id
-        }
         print(id_val)
         print(full_nm)
         print(clssfctn_tp)
