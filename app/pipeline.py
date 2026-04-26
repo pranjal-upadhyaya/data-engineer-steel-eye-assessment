@@ -44,7 +44,7 @@ class XMLExtractorAndParser:
     def run(self) -> None:
         """Execute the full pipeline: fetch metadata, download the target DLTINS file, and parse it to CSV."""
         try:
-            fetcher = XMLFetcher(self.url)
+            fetcher = XMLFetcher(self.url, folder_name=self.xml_folder_name)
 
             metadata_list = fetcher.extract_xml_file_metadata()
             target = self.get_dltins_file_by_index(metadata_list)
@@ -56,7 +56,7 @@ class XMLExtractorAndParser:
             for xml_file in downloaded_xml_files:
                 xml_file_path = os.path.join(self.xml_folder_path, xml_file)
                 logger.info(f"Parsing {xml_file_path}")
-                parser = XMLParser(xml_file_path)
+                parser = XMLParser(xml_file_path, csv_folder_name=app_config.csv_folder)
                 parser.extract_xml_from_file()
         except Exception as e:
             logger.error(f"Pipeline failed: {e}")
