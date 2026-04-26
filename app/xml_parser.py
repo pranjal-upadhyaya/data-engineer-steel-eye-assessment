@@ -60,6 +60,13 @@ class XMLParser:
             local_csv_path = os.path.join(self.csv_folder_path, f"{file_name}.csv")
             self._upload_to_cloud(local_csv_path)
 
+        try:
+            os.remove(self.xml_file_path)
+            logger.info(f"Deleted XML file {self.xml_file_path}")
+        except Exception as e:
+            logger.error(f"Failed to delete XML file {self.xml_file_path}: {e}")
+            raise
+
     def _upload_to_cloud(self, local_path: str) -> None:
         """Upload a locally written CSV file to the configured cloud storage path using fsspec.
 
