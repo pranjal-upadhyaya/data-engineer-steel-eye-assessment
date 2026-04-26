@@ -32,15 +32,35 @@ class XMLFetcher:
             A list of ESMARegistersFileModel instances, one per file record in the response.
         """
         output = []
-        response = requests.get(url=self.url)
-        logger.info(f"Fetched metadata — HTTP {response.status_code}")
-        root = etree.fromstring(response.content)
-        docs = root.xpath("/response/result/doc")
-        logger.info(f"Found {len(docs)} file records")
-        for doc in docs:
-            file_metadata = {child.get("name"): child.text for child in doc}
-            file_metadata = ESMARegistersFileModel.model_validate(file_metadata)
-            output.append(file_metadata)
+        try:
+            response = requests.get(url=self.url)
+            logger.info(f"Fetched metadata — HTTP {response.status_code}")
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error fetching metadata: {e}")
+            raise
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error fetching metadata: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error fetching metadata: {e}")
+            raise
+
+        try:
+            root = etree.fromstring(response.content)
+            docs = root.xpath("/response/result/doc")
+            logger.info(f"Found {len(docs)} file records")
+            for doc in docs:
+                file_metadata = {child.get("name"): child.text for child in doc}
+                file_metadata = ESMARegistersFileModel.model_validate(file_metadata)
+                output.append(file_metadata)
+        except etree.XMLSyntaxError as e:
+            logger.error(f"Failed to parse metadata response XML: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error fetching metadata: {e}")
+            raise
+
         return output
 
     def download_xml_file(self, url: str) -> None:
@@ -49,10 +69,30 @@ class XMLFetcher:
         Args:
             url: Direct download URL of the zip file.
         """
-        response = requests.get(url)
-        z = zipfile.ZipFile(io.BytesIO(response.content))
-        z.extractall(self.download_path)
-        logger.info(f"Extracted zip to {self.download_path}")
+        try:
+            response = requests.get(url)
+            logger.info(f"Downloaded zip — HTTP {response.status_code}")
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error downloading {url}: {e}")
+            raise
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error downloading {url}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error fetching metadata: {e}")
+            raise
+
+        try:
+            z = zipfile.ZipFile(io.BytesIO(response.content))
+            z.extractall(self.download_path)
+            logger.info(f"Extracted zip to {self.download_path}")
+        except zipfile.BadZipFile as e:
+            logger.error(f"Invalid zip file from {url}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error fetching metadata: {e}")
+            raise
 
     def download_xml_files(
         self, xml_file_metadata_list: List[ESMARegistersFileModel]

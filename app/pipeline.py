@@ -34,22 +34,30 @@ class XMLExtractorAndParser:
         Returns:
             The ESMARegistersFileModel at position ``file_index`` among DLTINS entries.
         """
-        dltins_files = [m for m in metadata_list if m.file_type == "DLTINS"]
-        return dltins_files[self.file_index]
+        try:
+            dltins_files = [m for m in metadata_list if m.file_type == "DLTINS"]
+            return dltins_files[self.file_index]
+        except Exception as e:
+            logger.error(f"No DLTINS file found at index {self.file_index}: {e}")
+            raise
 
     def run(self) -> None:
         """Execute the full pipeline: fetch metadata, download the target DLTINS file, and parse it to CSV."""
-        fetcher = XMLFetcher(self.url)
+        try:
+            fetcher = XMLFetcher(self.url)
 
-        metadata_list = fetcher.extract_xml_file_metadata()
-        target = self.get_dltins_file_by_index(metadata_list)
+            metadata_list = fetcher.extract_xml_file_metadata()
+            target = self.get_dltins_file_by_index(metadata_list)
 
-        fetcher.download_xml_file(target.download_link)
-        downloaded_xml_files = fetcher.list_downloaded_xml_files()
-        logger.info(f"XML files to parse: {downloaded_xml_files}")
+            fetcher.download_xml_file(target.download_link)
+            downloaded_xml_files = fetcher.list_downloaded_xml_files()
+            logger.info(f"XML files to parse: {downloaded_xml_files}")
 
-        for xml_file in downloaded_xml_files:
-            xml_file_path = os.path.join(self.xml_folder_path, xml_file)
-            logger.info(f"Parsing {xml_file_path}")
-            parser = XMLParser(xml_file_path)
-            parser.extract_xml_from_file()
+            for xml_file in downloaded_xml_files:
+                xml_file_path = os.path.join(self.xml_folder_path, xml_file)
+                logger.info(f"Parsing {xml_file_path}")
+                parser = XMLParser(xml_file_path)
+                parser.extract_xml_from_file()
+        except Exception as e:
+            logger.error(f"Pipeline failed: {e}")
+            raise

@@ -29,13 +29,23 @@ class XMLParser:
 
     def extract_xml_from_file(self) -> None:
         """Stream-parse the XML file using iterparse and trigger data extraction."""
-        context = etree.iterparse(
-            self.xml_file_path,
-            events=("start", "end"),
-            tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd",
-        )
-        self.extract_xml_data(context)
-        del context
+        try:
+            context = etree.iterparse(
+                self.xml_file_path,
+                events=("start", "end"),
+                tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd",
+            )
+            self.extract_xml_data(context)
+            del context
+        except FileNotFoundError as e:
+            logger.error(f"XML file not found: {self.xml_file_path}: {e}")
+            raise
+        except etree.XMLSyntaxError as e:
+            logger.error(f"Failed to parse XML file {self.xml_file_path}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error parsing {self.xml_file_path}: {e}")
+            raise
 
     def extract_xml_data(self, context: Any) -> List[dict]:
         """Iterate over parsed XML elements, extract fields, and write in batches to CSV.
@@ -108,12 +118,19 @@ class XMLParser:
         Args:
             data: List of dicts representing one batch of parsed XML records.
         """
-        df = self.process_xml_data(data)
-        write_mode = "w" if self.first_write else "a"
-        file_name = os.path.basename(self.xml_file_path)
-        file_path = os.path.join(self.csv_folder_path, f"{file_name}.csv")
-        df.to_csv(file_path, mode=write_mode, header=self.first_write, index=False)
-        self.first_write = False
+        try:
+            df = self.process_xml_data(data)
+            write_mode = "w" if self.first_write else "a"
+            file_name = os.path.basename(self.xml_file_path)
+            file_path = os.path.join(self.csv_folder_path, f"{file_name}.csv")
+            df.to_csv(file_path, mode=write_mode, header=self.first_write, index=False)
+            self.first_write = False
+        except OSError as e:
+            logger.error(f"Failed to write CSV to {file_path}: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error writing CSV: {e}")
+            raise
 
     def extract_data_from_xml_ele(
         self, parent_element: Any, namespace: str, tag: str
