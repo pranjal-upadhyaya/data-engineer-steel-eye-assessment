@@ -1,9 +1,10 @@
+import os
 from typing import List
+
+from app.config import app_config
+from app.model import ESMARegistersFileModel
 from app.xml_fetcher import XMLFetcher
 from app.xml_parser import XMLParser
-from app.model import ESMARegistersFileModel
-from app.config import app_config
-import os
 
 
 class XMLExtractorAndParser:
@@ -21,7 +22,9 @@ class XMLExtractorAndParser:
         self.xml_folder_path = os.path.join(os.getcwd(), self.xml_folder_name)
         self.file_index = 1
 
-    def get_dltins_file_by_index(self, metadata_list: List[ESMARegistersFileModel]) -> ESMARegistersFileModel:
+    def get_dltins_file_by_index(
+        self, metadata_list: List[ESMARegistersFileModel]
+    ) -> ESMARegistersFileModel:
         """Filter the metadata list for DLTINS file types and return the entry at the configured index.
 
         Args:

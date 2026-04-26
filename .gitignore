@@ -1,6 +1,6 @@
 .venv
 .DS_Store
 .env
-.xml
-
+*.xml
+*.csv
 __pycache__/

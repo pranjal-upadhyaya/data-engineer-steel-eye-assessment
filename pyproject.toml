@@ -23,3 +23,24 @@ packages = [{include="app"}]
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (==0.15.12)",
+    "pre-commit (>=4.6.0,<5.0.0)"
+]
+
+[tool.ruff]
+# Match Black's default line length
+line-length = 88
+target-version = "py311" # Change to your python version
+
+[tool.ruff.lint]
+# "I" handles isort-style import sorting
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+# Enable Black-compatible formatting
+quote-style = "double"
+indent-style = "space"

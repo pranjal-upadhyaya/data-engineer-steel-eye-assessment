@@ -1,14 +1,18 @@
-from typing import Any, List
-from lxml import etree
-import pandas as pd
 import os
+from typing import Any, List
+
+import pandas as pd
+from lxml import etree
+
 from app.config import app_config
 
 
 class XMLParser:
     """Parses a large DLTINS XML file in batches and writes the extracted data to CSV."""
 
-    def __init__(self, file_path: str, csv_folder_name: str = app_config.csv_folder) -> None:
+    def __init__(
+        self, file_path: str, csv_folder_name: str = app_config.csv_folder
+    ) -> None:
         """Initialise the parser with the XML file path and the target CSV output folder.
 
         Args:
@@ -24,7 +28,11 @@ class XMLParser:
 
     def extract_xml_from_file(self) -> None:
         """Stream-parse the XML file using iterparse and trigger data extraction."""
-        context = etree.iterparse(self.xml_file_path, events=("start", "end"), tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd")
+        context = etree.iterparse(
+            self.xml_file_path,
+            events=("start", "end"),
+            tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd",
+        )
         self.extract_xml_data(context)
         del context
 
@@ -59,7 +67,9 @@ class XMLParser:
                 if len(data) >= self.batch_size:
                     self.dump_xml_data_to_csv(data)
                     data = []
-                    print(f"Processed batch {batch_number} with {element_count} elements")
+                    print(
+                        f"Processed batch {batch_number} with {element_count} elements"
+                    )
                     batch_number += 1
                     element_count = 0
 
@@ -106,7 +116,9 @@ class XMLParser:
         df.to_csv(file_path, mode=write_mode, header=self.first_write, index=False)
         self.first_write = False
 
-    def extract_data_from_xml_ele(self, parent_element: Any, namespace: str, tag: str) -> str | None:
+    def extract_data_from_xml_ele(
+        self, parent_element: Any, namespace: str, tag: str
+    ) -> str | None:
         """Extract the text value of a child element within a given parent element.
 
         Args:

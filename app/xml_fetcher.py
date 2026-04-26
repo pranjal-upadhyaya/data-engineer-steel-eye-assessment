@@ -1,8 +1,13 @@
+import io
+import os
+import zipfile
 from typing import List
-import requests, zipfile, io, os
+
+import requests
 from lxml import etree
-from app.model import ESMARegistersFileModel
+
 from app.config import app_config
+from app.model import ESMARegistersFileModel
 
 
 class XMLFetcher:
@@ -49,7 +54,9 @@ class XMLFetcher:
         z.extractall(self.download_path)
         print("=====================")
 
-    def download_xml_files(self, xml_file_metadata_list: List[ESMARegistersFileModel]) -> None:
+    def download_xml_files(
+        self, xml_file_metadata_list: List[ESMARegistersFileModel]
+    ) -> None:
         """Download zip files for all file records in the provided metadata list.
 
         Args:
