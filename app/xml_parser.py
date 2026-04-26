@@ -23,34 +23,40 @@ class XMLParser:
 
     def extract_xml_data(self, context: Any):
         data = []
+        batch_number = 1
+        element_count = 0
         for event, elem in context:
-            if event == "start":
-                print("========================")
-            print(event, elem.tag)
+            
             if event == "end":
+                element_count += 1
                 data_set = {}
                 namespace = elem.tag.split("}")[0]+"}"
-                print(namespace)
+                
                 fin = elem.find(f"{namespace}FinInstrmGnlAttrbts")
                 tag_list = ["Id", "FullNm", "ClssfctnTp", "CmmdtyDerivInd", "NtnlCcy"]
                 for tag in tag_list:
                     val = self.extract_data_from_xml_ele(fin, namespace, tag)
                     data_set[f"FinInstrmGnlAttrbts.{tag}"] = val
+                
                 val = self.extract_data_from_xml_ele(elem, namespace, "Issr")
                 data_set[f"Issr"] = val
-                print(data_set)
+                
                 data.append(data_set)
                 if len(data) >= self.batch_size:
                     self.dump_xml_data_to_csv(data)
                     data = []
+                    print(f"Processed batch {batch_number} with {element_count} elements")
+                    batch_number += 1
+                    element_count = 0
+                
                 elem.clear()
                 while elem.getprevious() is not None:
                     del elem.getparent()[0]
-                print("========================")
 
         if len(data) > 0:
             self.dump_xml_data_to_csv(data)
             data = []
+            print(f"Processed batch: {batch_number} with {element_count} elements")
         return data
 
     def process_xml_data(self, data: List[dict]):
