@@ -2,18 +2,22 @@ from typing import Any, List
 from lxml import etree
 import pandas as pd
 import os
+from app.config import app_config
 
 
 class XMLParser:
 
-    def __init__(self, file_path: str) -> None:
-        self.file_path = file_path
+    def __init__(self, file_path: str, csv_folder_name: str = app_config.csv_folder) -> None:
+        self.xml_file_path = file_path
+        self.csv_folder_name = csv_folder_name
+        self.csv_folder_path = os.path.join(os.getcwd(), self.csv_folder_name)
+        os.makedirs(self.csv_folder_path, exist_ok=True)
         self.first_write = True
         self.batch_size = 1000
 
 
     def extract_xml_from_file(self):
-        context = etree.iterparse(self.file_path, events=("start", "end"), tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd")
+        context = etree.iterparse(self.xml_file_path, events=("start", "end"), tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd")
 
         self.extract_xml_data(context)
 
@@ -72,9 +76,11 @@ class XMLParser:
 
         write_mode = "w" if self.first_write else "a"
 
-        file_name = os.path.basename(self.file_path)
+        file_name = os.path.basename(self.xml_file_path)
 
-        df.to_csv(f"{file_name}.csv", mode = write_mode)
+        file_path = os.path.join(self.csv_folder_path, f"{file_name}.csv")
+
+        df.to_csv(file_path, mode = write_mode)
 
         self.first_write = False
 
