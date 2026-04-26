@@ -1,11 +1,12 @@
 from typing import Any, List
 from lxml import etree
 import pandas as pd
+import os
 
 
 class XMLParser:
 
-    def __init__(self, file_path) -> None:
+    def __init__(self, file_path: str) -> None:
         self.file_path = file_path
         self.first_write = True
         self.batch_size = 1000
@@ -71,7 +72,9 @@ class XMLParser:
 
         write_mode = "w" if self.first_write else "a"
 
-        df.to_csv("xml_data_dump.csv", mode = write_mode)
+        file_name = os.path.basename(self.file_path)
+
+        df.to_csv(f"{file_name}.csv", mode = write_mode)
 
         self.first_write = False
 

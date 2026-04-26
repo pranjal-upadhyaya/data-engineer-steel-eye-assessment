@@ -5,8 +5,9 @@ from app.model import ESMARegistersFileModel
 
 class XMLFetcher:
 
-    def __init__(self, url) -> None:
+    def __init__(self, url, folder_name) -> None:
         self.url = url
+        self.folder_name = folder_name
 
     def extract_xml_file_metadata(self):
 
@@ -33,10 +34,10 @@ class XMLFetcher:
         response = requests.get(url)
         z = zipfile.ZipFile(io.BytesIO(response.content))
         cwd = os.getcwd()
-        download_path = os.path.join(cwd, "temp")
+        download_path = os.path.join(cwd, self.folder_name)
         z.extractall(download_path)
         print("=====================")
-        return download_path
+        return
 
     def download_xml_files(self, xml_file_metadata_list: List[ESMARegistersFileModel]):
         for metadata in xml_file_metadata_list:
@@ -50,3 +51,10 @@ class XMLFetcher:
         xml_file_metadata_list = self.extract_xml_file_metadata()
         self.download_xml_files(xml_file_metadata_list)
         return
+
+    def list_downloaded_xml_files(self):
+        cwd = os.getcwd()
+        download_path = os.path.join(cwd, self.folder_name)
+        files = os.listdir(download_path)
+        xml_files = [file for file in files if file.endswith(".xml")]
+        return xml_files
