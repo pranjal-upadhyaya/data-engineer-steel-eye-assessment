@@ -1,7 +1,6 @@
 from typing import Any, List
 from lxml import etree
 import pandas as pd
-import csv
 
 
 class XMLParser:
@@ -15,10 +14,12 @@ class XMLParser:
     def extract_xml_from_file(self):
         context = etree.iterparse(self.file_path, events=("start", "end"), tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd")
 
-        data = self.extract_xml_data(context)
+        self.extract_xml_data(context)
 
         del context
-    
+
+        return None
+
 
     def extract_xml_data(self, context: Any):
         data = []
@@ -52,19 +53,21 @@ class XMLParser:
             data = []
         return data
 
-    def dump_xml_data_to_csv(self, data: List[dict]):
+    def process_xml_data(self, data: List[dict]):
         df = pd.DataFrame(data)
+        df["a_count"] = df["FinInstrmGnlAttrbts.FullNm"].fillna("").str.count("a")
+        df["contains_a"] = df["a_count"].apply(lambda x: "YES" if x > 0 else "NO")
+        return df
 
-        if self.first_write:
-            with open("xml_data_dump.csv", "w", newline="", encoding="utf-8") as file:
-                writer = csv.DictWriter(file, fieldnames=["FinInstrmGnlAttrbts.Id", "FinInstrmGnlAttrbts.FullNm", "FinInstrmGnlAttrbts.ClssfctnTp", "FinInstrmGnlAttrbts.CmmdtyDerivInd", "FinInstrmGnlAttrbts.NtnlCcy", "Issr"])
-                writer.writeheader()
-                writer.writerows(data)
-            self.first_write = False
-        else:
-            with open("xml_data_dump.csv", "a", newline="", encoding="utf-8") as file:
-                writer = csv.DictWriter(file, fieldnames=["FinInstrmGnlAttrbts.Id", "FinInstrmGnlAttrbts.FullNm", "FinInstrmGnlAttrbts.ClssfctnTp", "FinInstrmGnlAttrbts.CmmdtyDerivInd", "FinInstrmGnlAttrbts.NtnlCcy", "Issr"])
-                writer.writerows(data)
+    def dump_xml_data_to_csv(self, data: List[dict]):
+
+        df = self.process_xml_data(data)
+
+        write_mode = "w" if self.first_write else "a"
+
+        df.to_csv("xml_data_dump.csv", mode = write_mode)
+
+        self.first_write = False
 
         return None
 
