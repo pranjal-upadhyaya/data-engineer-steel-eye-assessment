@@ -3,6 +3,8 @@ from datetime import datetime
 
 
 class ESMARegistersFileModel(BaseModel):
+    """Pydantic model representing a single file record from the ESMA FIRDS Solr API response."""
+
     root: str = Field(alias="_root_", description="Root identifier of the Solr document")
     id: str = Field(description="Unique identifier of the file record")
     published_instrument_file_id: str = Field(description="Published instrument file ID, matches the record ID")
