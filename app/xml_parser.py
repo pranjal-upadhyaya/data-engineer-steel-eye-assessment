@@ -1,6 +1,7 @@
 import os
 from typing import Any, List
 
+import fsspec
 import pandas as pd
 from lxml import etree
 
@@ -12,23 +13,30 @@ class XMLParser:
     """Parses a large DLTINS XML file in batches and writes the extracted data to CSV."""
 
     def __init__(
-        self, file_path: str, csv_folder_name: str = app_config.csv_folder
+        self,
+        file_path: str,
+        csv_folder_name: str = app_config.csv_folder,
+        cloud_upload_path: str = app_config.csv_storage_path,
     ) -> None:
         """Initialise the parser with the XML file path and the target CSV output folder.
 
         Args:
             file_path: Absolute path to the XML file to be parsed.
-            csv_folder_name: Relative path to the folder where CSV output files will be written.
+            csv_folder_name: Relative path to the local folder where CSV files are written in batches.
+            cloud_upload_path: Optional fsspec-compatible URL to upload the completed CSV to cloud
+                storage (e.g. ``s3://bucket/csv`` or ``abfs://container@account.dfs.core.windows.net/csv``).
+                When empty, the CSV is kept locally only.
         """
         self.xml_file_path = file_path
         self.csv_folder_name = csv_folder_name
         self.csv_folder_path = os.path.join(os.getcwd(), self.csv_folder_name)
+        self.cloud_upload_path = cloud_upload_path
         os.makedirs(self.csv_folder_path, exist_ok=True)
         self.first_write = True
         self.batch_size = 1000
 
     def extract_xml_from_file(self) -> None:
-        """Stream-parse the XML file using iterparse and trigger data extraction."""
+        """Stream-parse the XML file using iterparse, write batches locally, then upload to cloud if configured."""
         try:
             context = etree.iterparse(
                 self.xml_file_path,
@@ -45,6 +53,32 @@ class XMLParser:
             raise
         except Exception as e:
             logger.error(f"Unexpected error parsing {self.xml_file_path}: {e}")
+            raise
+
+        if self.cloud_upload_path:
+            file_name = os.path.basename(self.xml_file_path)
+            local_csv_path = os.path.join(self.csv_folder_path, f"{file_name}.csv")
+            self._upload_to_cloud(local_csv_path)
+
+    def _upload_to_cloud(self, local_path: str) -> None:
+        """Upload a locally written CSV file to the configured cloud storage path using fsspec.
+
+        Supports any fsspec-compatible backend — AWS S3 (``s3://``), Azure Blob Storage
+        (``abfs://``), and others — determined solely by the URL scheme of
+        ``cloud_upload_path``.  The appropriate backend package (e.g. ``s3fs`` for S3,
+        ``adlfs`` for Azure) must be installed separately.
+
+        Args:
+            local_path: Absolute local path of the CSV file to upload.
+        """
+        file_name = os.path.basename(local_path)
+        cloud_path = f"{self.cloud_upload_path}/{file_name}"
+        try:
+            fs, stripped_cloud_path = fsspec.core.url_to_fs(cloud_path)
+            fs.put(local_path, stripped_cloud_path)
+            logger.info(f"Uploaded {local_path} to {cloud_path}")
+        except Exception as e:
+            logger.error(f"Failed to upload {local_path} to {cloud_path}: {e}")
             raise
 
     def extract_xml_data(self, context: Any) -> List[dict]:
