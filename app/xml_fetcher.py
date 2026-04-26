@@ -8,6 +8,7 @@ from lxml import etree
 
 from app.config import app_config
 from app.model import ESMARegistersFileModel
+from app.utils.logging import logger
 
 
 class XMLFetcher:
@@ -32,11 +33,10 @@ class XMLFetcher:
         """
         output = []
         response = requests.get(url=self.url)
-        print(response.status_code)
+        logger.info(f"Fetched metadata — HTTP {response.status_code}")
         root = etree.fromstring(response.content)
-        print("=====================")
         docs = root.xpath("/response/result/doc")
-        print(docs)
+        logger.info(f"Found {len(docs)} file records")
         for doc in docs:
             file_metadata = {child.get("name"): child.text for child in doc}
             file_metadata = ESMARegistersFileModel.model_validate(file_metadata)
@@ -52,7 +52,7 @@ class XMLFetcher:
         response = requests.get(url)
         z = zipfile.ZipFile(io.BytesIO(response.content))
         z.extractall(self.download_path)
-        print("=====================")
+        logger.info(f"Extracted zip to {self.download_path}")
 
     def download_xml_files(
         self, xml_file_metadata_list: List[ESMARegistersFileModel]
@@ -65,7 +65,7 @@ class XMLFetcher:
         for metadata in xml_file_metadata_list:
             download_link = metadata.download_link
             self.download_xml_file(url=download_link)
-            print(f"Successfully downloaded xml file from link: {download_link}")
+            logger.info(f"Successfully downloaded XML file from: {download_link}")
 
     def extract_and_download_xml_files(self) -> None:
         """Fetch file metadata from the API and download all listed zip files."""

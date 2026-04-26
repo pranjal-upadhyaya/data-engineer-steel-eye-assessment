@@ -5,6 +5,7 @@ import pandas as pd
 from lxml import etree
 
 from app.config import app_config
+from app.utils.logging import logger
 
 
 class XMLParser:
@@ -67,9 +68,7 @@ class XMLParser:
                 if len(data) >= self.batch_size:
                     self.dump_xml_data_to_csv(data)
                     data = []
-                    print(
-                        f"Processed batch {batch_number} with {element_count} elements"
-                    )
+                    logger.info(f"Processed batch {batch_number} with {element_count} elements")
                     batch_number += 1
                     element_count = 0
 
@@ -80,7 +79,7 @@ class XMLParser:
         if len(data) > 0:
             self.dump_xml_data_to_csv(data)
             data = []
-            print(f"Processed batch: {batch_number} with {element_count} elements")
+            logger.info(f"Processed batch {batch_number} with {element_count} elements")
         return data
 
     def process_xml_data(self, data: List[dict]) -> pd.DataFrame:

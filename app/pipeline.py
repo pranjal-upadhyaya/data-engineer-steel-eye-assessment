@@ -3,6 +3,7 @@ from typing import List
 
 from app.config import app_config
 from app.model import ESMARegistersFileModel
+from app.utils.logging import logger
 from app.xml_fetcher import XMLFetcher
 from app.xml_parser import XMLParser
 
@@ -45,10 +46,10 @@ class XMLExtractorAndParser:
 
         fetcher.download_xml_file(target.download_link)
         downloaded_xml_files = fetcher.list_downloaded_xml_files()
-        print(downloaded_xml_files)
+        logger.info(f"XML files to parse: {downloaded_xml_files}")
 
         for xml_file in downloaded_xml_files:
             xml_file_path = os.path.join(self.xml_folder_path, xml_file)
-            print(xml_file_path)
+            logger.info(f"Parsing {xml_file_path}")
             parser = XMLParser(xml_file_path)
             parser.extract_xml_from_file()
