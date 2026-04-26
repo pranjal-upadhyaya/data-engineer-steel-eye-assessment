@@ -1,6 +1,7 @@
-from typing import Any
+from typing import Any, List
 from lxml import etree
 import requests, zipfile, io, os
+import pandas as pd
 
 
 def extract_xml(url: str):
@@ -37,41 +38,44 @@ def extract_xml_1(url: str):
 def extract_xml_from_file(file_path: str):
     context = etree.iterparse(file_path, events=("start", "end"), tag="{urn:iso:std:iso:20022:tech:xsd:auth.036.001.02}TermntdRcrd")
 
-    extract_xml_data(context)
+    data = extract_xml_data(context, [])
+
+    del context
+
+    dump_xml_data_to_csv(data)
     
 
-def extract_xml_data(context: Any):
+def extract_xml_data(context: Any, data: []):
     loop = 100
     for event, elem in context:
-        namespace = elem.tag.split("}")[0]+"}"
-        print(namespace)
-        fin = elem.find(f"{namespace}FinInstrmGnlAttrbts")
-        id_val      = extract_data_from_xml_ele(fin, namespace, "Id")
-        full_nm     = extract_data_from_xml_ele(fin, namespace, "FullNm")
-        clssfctn_tp = extract_data_from_xml_ele(fin, namespace, "ClssfctnTp")
-        cmmdty      = extract_data_from_xml_ele(fin, namespace, "CmmdtyDerivInd")
-        ntnl_ccy    = extract_data_from_xml_ele(fin, namespace, "NtnlCcy")
-        issr        = extract_data_from_xml_ele(fin, namespace, "Issr")
-        print(id_val)
-        print(full_nm)
-        print(clssfctn_tp)
-        print(cmmdty)
-        print(ntnl_ccy)
-        print(issr)
+        if event == "start":
+            print("========================")
         print(event, elem.tag)
         if event == "end":
+            data_set = {}
+            namespace = elem.tag.split("}")[0]+"}"
+            print(namespace)
+            fin = elem.find(f"{namespace}FinInstrmGnlAttrbts")
+            tag_list = ["Id", "FullNm", "ClssfctnTp", "CmmdtyDerivInd", "NtnlCcy", "Issr"]
+            for tag in tag_list:
+                val = extract_data_from_xml_ele(fin, namespace, tag)
+                data_set[f"FinInstrmGnlAttrbts.{tag}"] = val
+            print(data_set)
+            data.append(data_set)
             elem.clear()
             while elem.getprevious() is not None:
                 del elem.getparent()[0]
-        print("========================")
+            print("========================")
         
         loop -= 1
         if loop < 0:
             break
-    del context
+    return data
 
-def dump_xml_data_to_csv():
-    pass
+def dump_xml_data_to_csv(data: List[dict]):
+    df = pd.DataFrame(data)
+    df.to_csv("xml_data_dump.csv")
+    # print(df)
 
 def extract_data_from_xml_ele(parent_element: Any, namespace: str, tag: str):
     element = parent_element.find(f"{namespace}{tag}")
