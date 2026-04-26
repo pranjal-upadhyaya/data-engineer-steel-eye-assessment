@@ -4,6 +4,8 @@ import requests, zipfile, io, os
 import pandas as pd
 from app import xml_parser
 from app.xml_parser import XMLParser
+from app.xml_fetcher import XMLFetcher
+from app.model import ESMARegistersFileModel
 
 
 def extract_xml(url: str):
@@ -65,12 +67,13 @@ def download_file(url: str):
 
 
 if __name__ == "__main__":
-    # url = "https://registers.esma.europa.eu/solr/esma_registers_firds_files/select?q=*&fq=publication_date:%5B2021-01-17T00:00:00Z+TO+2021-01-19T23:59:59Z%5D&wt=xml&indent=true&start=0&rows=100"
-    # extract_xml(url)
+    url = "https://registers.esma.europa.eu/solr/esma_registers_firds_files/select?q=*&fq=publication_date:%5B2021-01-17T00:00:00Z+TO+2021-01-19T23:59:59Z%5D&wt=xml&indent=true&start=0&rows=100"
+    xml_fetcher = XMLFetcher(url)
+    xml_fetcher.extract_and_download_xml_files()
     # url_1 = "https://firds.esma.europa.eu/firds/DLTINS_20210117_01of01.zip"
     # download_path = download_file(url_1)
     download_path = "/Users/pranjal/code/data-engineer-steel-eye-assessment/temp"
     print(download_path)
-    file_name = os.path.join(download_path, "DLTINS_20210117_01of01.xml")
-    xml_parser = XMLParser(file_name)
-    xml_parser.extract_xml_from_file()
+    # file_name = os.path.join(download_path, "DLTINS_20210117_01of01.xml")
+    # xml_parser = XMLParser(file_name)
+    # xml_parser.extract_xml_from_file()
