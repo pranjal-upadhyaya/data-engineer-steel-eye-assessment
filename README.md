@@ -33,7 +33,7 @@ A Python pipeline that downloads financial instrument data from the ESMA FIRDS A
 ## Pipeline Overview
 
 1. Fetch file metadata from the ESMA FIRDS Solr API.
-2. Select the second `DLTINS` file from the response.
+2. Select the target `DLTINS` file by index from the response (defaults to the second entry, configurable via `file_index`).
 3. Download and extract the zip file.
 4. Stream-parse the XML using `lxml.iterparse` in batches of 1 000 records.
 5. Write a CSV with the following columns:
