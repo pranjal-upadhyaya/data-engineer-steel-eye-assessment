@@ -72,8 +72,8 @@ class XMLParser:
 
         Supports any fsspec-compatible backend — AWS S3 (``s3://``), Azure Blob Storage
         (``abfs://``), and others — determined solely by the URL scheme of
-        ``cloud_upload_path``.  The appropriate backend package (e.g. ``s3fs`` for S3,
-        ``adlfs`` for Azure) must be installed separately.
+        ``cloud_upload_path``.  Backend packages ``s3fs`` (S3) and ``adlfs`` (Azure)
+        are included in the project dependencies.
 
         Args:
             local_path: Absolute local path of the CSV file to upload.

@@ -80,13 +80,11 @@ BASE_FOLDER="temp"
 # Azure:   CSV_STORAGE_PATH="abfs://container@account.dfs.core.windows.net/csv"
 CSV_STORAGE_PATH=""
 
-# AWS credentials (required when CSV_STORAGE_PATH is s3://)
-# Install s3fs: poetry add s3fs
+# AWS credentials (used automatically by s3fs when CSV_STORAGE_PATH is s3://)
 AWS_ACCESS_KEY_ID=""
 AWS_SECRET_ACCESS_KEY=""
 
-# Azure credentials (required when CSV_STORAGE_PATH is abfs://)
-# Install adlfs: poetry add adlfs
+# Azure credentials (used automatically by adlfs when CSV_STORAGE_PATH is abfs://)
 AZURE_STORAGE_ACCOUNT_NAME=""
 AZURE_STORAGE_ACCOUNT_KEY=""
 ```
