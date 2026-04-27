@@ -132,6 +132,26 @@ class TestDownloadXmlFile:
             with pytest.raises(zipfile.BadZipFile):
                 fetcher.download_xml_file("http://example.com/file.zip")
 
+    def test_raises_on_unexpected_request_error(self, tmp_path):
+        with patch(
+            "app.xml_fetcher.requests.get",
+            side_effect=RuntimeError("unexpected"),
+        ):
+            fetcher = XMLFetcher("http://test.url", folder_name=str(tmp_path))
+            with pytest.raises(RuntimeError):
+                fetcher.download_xml_file("http://example.com/file.zip")
+
+    def test_raises_on_unexpected_extraction_error(self, tmp_path):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.content = make_zip_bytes("data.xml", b"<root/>")
+
+        with patch("app.xml_fetcher.requests.get", return_value=mock_response):
+            with patch("app.xml_fetcher.zipfile.ZipFile", side_effect=RuntimeError("extraction failed")):
+                fetcher = XMLFetcher("http://test.url", folder_name=str(tmp_path))
+                with pytest.raises(RuntimeError, match="extraction failed"):
+                    fetcher.download_xml_file("http://example.com/file.zip")
+
 
 class TestListDownloadedXmlFiles:
     def test_returns_only_xml_files(self, tmp_path):
