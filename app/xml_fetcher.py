@@ -80,7 +80,7 @@ class XMLFetcher:
             logger.error(f"Network error downloading {url}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error fetching metadata: {e}")
+            logger.error(f"Unexpected error downloading {url}: {e}")
             raise
 
         try:
@@ -91,7 +91,7 @@ class XMLFetcher:
             logger.error(f"Invalid zip file from {url}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Unexpected error fetching metadata: {e}")
+            logger.error(f"Unexpected error extracting zip from {url}: {e}")
             raise
 
     def download_xml_files(
