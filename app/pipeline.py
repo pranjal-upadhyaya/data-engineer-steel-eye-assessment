@@ -11,17 +11,19 @@ from app.xml_parser import XMLParser
 class XMLExtractorAndParser:
     """Orchestrates the full pipeline: fetching metadata, downloading XML files, and parsing them to CSV."""
 
-    def __init__(self, url: str, xml_folder_name: str = app_config.xml_folder) -> None:
+    def __init__(self, url: str, xml_folder_name: str = app_config.xml_folder, file_index: int = 1) -> None:
         """Initialise the pipeline with the ESMA API URL and the XML download folder.
 
         Args:
             url: The ESMA FIRDS Solr API URL to fetch file metadata from.
             xml_folder_name: Relative path to the folder where XML files are stored after download.
+            file_index: Zero-based index of the DLTINS file to process from the metadata list.
+                Defaults to 1 (the second DLTINS entry) as required by the assessment.
         """
         self.url = url
         self.xml_folder_name = xml_folder_name
         self.xml_folder_path = os.path.join(os.getcwd(), self.xml_folder_name)
-        self.file_index = 1
+        self.file_index = file_index
 
     def get_dltins_file_by_index(
         self, metadata_list: List[ESMARegistersFileModel]
